@@ -28,11 +28,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error(`Access denied. Please use the ${user.role} login portal.`);
         }
 
-        const deployedPortal = process.env.PORTAL_TYPE;
-        if (deployedPortal && deployedPortal !== user.role) {
-          throw new Error(`This link is securely restricted to ${deployedPortal}s only. Please use the correct link.`);
-        }
-
         const valid = verifyPassword(password, user.password_hash, user.password_salt);
         if (!valid) return null;
 
