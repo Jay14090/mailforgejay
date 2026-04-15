@@ -4,9 +4,9 @@ import { signIn } from 'next-auth/react';
 import { SessionProvider, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { Lock, User, AlertCircle } from 'lucide-react';
+import { Shield, User, AlertCircle } from 'lucide-react';
 
-function LoginContent() {
+function AdminLoginContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [username, setUsername] = useState('');
@@ -15,8 +15,8 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (session) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const role = (session.user as any)?.role;
       router.push(role === 'admin' ? '/admin' : '/dashboard');
     }
@@ -42,29 +42,32 @@ function LoginContent() {
     const result = await signIn('credentials', {
       username,
       password,
-      portal: 'user',
+      portal: 'admin',
       redirect: false,
     });
 
     setLoading(false);
 
     if (result?.error) {
-      setError('Invalid username or password');
+      // Extract error message from NextAuth
+      const errorMessage = result.error.includes('Access denied') 
+        ? 'Access denied. You must be an administrator.' 
+        : 'Invalid username or password';
+      setError(errorMessage);
     } else {
-      // Reload to pick up session
-      window.location.href = '/dashboard';
+      window.location.href = '/admin';
     }
   };
 
   return (
     <div className="login-page">
-      <div className="login-card">
-        <div style={{ width: 56, height: 56, borderRadius: '14px', background: 'linear-gradient(135deg, #6366f1, #a78bfa)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 0 30px rgba(99,102,241,0.3)' }}>
-          <Lock size={26} color="white" />
+      <div className="login-card" style={{ borderColor: 'var(--accent)', borderWidth: 1 }}>
+        <div style={{ width: 56, height: 56, borderRadius: '14px', background: 'var(--bg-elevated)', border: '1px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px', boxShadow: '0 0 30px rgba(99,102,241,0.1)' }}>
+          <Shield size={26} color="var(--accent)" />
         </div>
-        <h1>User Portal</h1>
-        <p style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 28 }}>
-          Sign in to access your campaign dashboard
+        <h1>Admin Portal</h1>
+        <p style={{ fontSize: 14, lineHeight: 1.6, marginBottom: 28, color: 'var(--warning)' }}>
+          Restricted access. Administrators only.
         </p>
 
         <form onSubmit={handleLogin}>
@@ -74,7 +77,7 @@ function LoginContent() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Username"
+                placeholder="Admin ID"
                 value={username}
                 onChange={e => setUsername(e.target.value)}
                 style={{ paddingLeft: 40 }}
@@ -86,11 +89,11 @@ function LoginContent() {
 
           <div className="form-group">
             <div style={{ position: 'relative' }}>
-              <Lock size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+              <Shield size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
               <input
                 type="password"
                 className="form-input"
-                placeholder="Password"
+                placeholder="Passcode"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 style={{ paddingLeft: 40 }}
@@ -113,22 +116,18 @@ function LoginContent() {
             disabled={loading}
             style={{ width: '100%', justifyContent: 'center', padding: '14px 24px', fontSize: 15 }}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Authenticating...' : 'Enter Admin Portal'}
           </button>
         </form>
-
-        <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 24 }}>
-          Contact your administrator for login credentials.
-        </p>
       </div>
     </div>
   );
 }
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   return (
     <SessionProvider>
-      <LoginContent />
+      <AdminLoginContent />
     </SessionProvider>
   );
 }
